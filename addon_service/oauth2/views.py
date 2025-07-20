@@ -36,7 +36,50 @@ async def oauth2_callback_view(request):
     )
     _accounts = await _token_metadata.update_with_fresh_token(_fresh_token_result)
     await asyncio.gather(*[_account.execute_post_auth_hook() for _account in _accounts])
-    return HttpResponse(status=HTTPStatus.OK)  # TODO: redirect
+    
+    # TODO: redirect to appropriate page
+    # For now, show a simple success message
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>認証完了</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                background-color: #f5f5f5;
+            }
+            .message-box {
+                text-align: center;
+                padding: 40px;
+                background-color: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            h1 {
+                color: #4caf50;
+                margin-bottom: 20px;
+            }
+            p {
+                color: #666;
+                line-height: 1.6;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="message-box">
+            <h1>Auth done</h1>
+            <p>Close this page.</p>
+        </div>
+    </body>
+    </html>
+    """
+    return HttpResponse(html_content, content_type="text/html")
 
 
 ###
