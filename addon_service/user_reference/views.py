@@ -1,3 +1,4 @@
+from django.conf import settings
 from drf_spectacular.utils import (
     extend_schema,
     extend_schema_view,
@@ -8,6 +9,14 @@ from addon_service.common.viewsets import RestrictedReadOnlyViewSet
 
 from .models import UserReference
 from .serializers import UserReferenceSerializer
+
+# Use development permission class with URI normalization in DEBUG mode
+if settings.DEBUG:
+    from addon_service.common.dev_permissions import DevSessionUserIsOwner
+    _permission_class = DevSessionUserIsOwner
+else:
+    _permission_class = SessionUserIsOwner
+
 
 
 @extend_schema_view(
@@ -22,7 +31,7 @@ class UserReferenceViewSet(RestrictedReadOnlyViewSet):
     queryset = UserReference.objects.all()
     serializer_class = UserReferenceSerializer
     permission_classes = [
-        SessionUserIsOwner,
+        _permission_class,
     ]
     allowed_query_params = ["uris"]
     # Satisfies requirements of `RestrictedReadOnlyViewSet.list`
