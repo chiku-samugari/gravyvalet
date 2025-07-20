@@ -24,6 +24,10 @@ services:
       OSF_AUTH_COOKIE_NAME: osf
       AMQP_BROKER_URL: "amqp://guest:guest@rabbitmq:5672"
       GRAVYVALET_ENCRYPT_SECRET: "this is fine"
+      OSF_AUTH_COOKIE_SECRET: CHANGEME  # Must match OSF's SECRET_KEY
+      SESSION_COOKIE_DOMAIN: ""  # Empty for localhost
+      SESSION_COOKIE_SECURE: False  # False for local HTTP
+      SESSION_COOKIE_SAMESITE: "Lax"  # Lax for local development
     ports:
       - 8004:8004
     stdin_open: true
