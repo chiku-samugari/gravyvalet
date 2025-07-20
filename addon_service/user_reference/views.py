@@ -12,10 +12,15 @@ from .serializers import UserReferenceSerializer
 
 # Use development permission class with URI normalization in DEBUG mode
 if settings.DEBUG:
-    from addon_service.common.dev_permissions import DevSessionUserIsOwner
+    from addon_service.common.dev_permissions import (
+        DevSessionUserIsOwner,
+        DevRestrictedListEndpointFilterBackend
+    )
     _permission_class = DevSessionUserIsOwner
+    _filter_backend_class = DevRestrictedListEndpointFilterBackend
 else:
     _permission_class = SessionUserIsOwner
+    _filter_backend_class = RestrictedReadOnlyViewSet.filter_backends[0]
 
 
 
@@ -33,6 +38,7 @@ class UserReferenceViewSet(RestrictedReadOnlyViewSet):
     permission_classes = [
         _permission_class,
     ]
+    filter_backends = [_filter_backend_class]
     allowed_query_params = ["uris"]
     # Satisfies requirements of `RestrictedReadOnlyViewSet.list`
     required_list_filter_fields = ("user_uri",)

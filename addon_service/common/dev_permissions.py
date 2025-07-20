@@ -2,9 +2,12 @@
 import logging
 from django.conf import settings
 from urllib.parse import urlparse, urlunparse
+from django.http.request import QueryDict
+from rest_framework import serializers
 
 from .permissions import SessionUserIsOwner as BaseSessionUserIsOwner
 from .get_user_uri import get_user_uri
+from .filtering import RestrictedListEndpointFilterBackend, extract_filter_expressions
 
 logger = logging.getLogger(__name__)
 
@@ -62,3 +65,35 @@ class DevSessionUserIsOwner(BaseSessionUserIsOwner):
         )
 
         return normalized_session_uri == normalized_obj_uri
+
+
+class DevRestrictedListEndpointFilterBackend(RestrictedListEndpointFilterBackend):
+    """Development version of RestrictedListEndpointFilterBackend with URI normalization"""
+
+    def filter_queryset(self, request, queryset, view):
+        if view.action != "list":
+            return queryset
+
+        required_filters = set(view.required_list_filter_fields)
+        filter_expressions = extract_filter_expressions(
+            request.query_params, view.get_serializer()
+        )
+
+        # Normalize user_uri filter in development
+        if 'user_uri' in filter_expressions and settings.DEBUG:
+            original_uri = filter_expressions['user_uri']
+            normalized_uri = normalize_user_uri(original_uri)
+            filter_expressions['user_uri'] = normalized_uri
+
+            logger.info(
+                f"DevRestrictedListEndpointFilterBackend: "
+                f"Normalized filter user_uri: {original_uri} -> {normalized_uri}"
+            )
+
+        missing_filters = required_filters - filter_expressions.keys()
+        if missing_filters:
+            raise serializers.ValidationError(
+                f"Request was missing the following required filters for this endpoint: {missing_filters}"
+            )
+
+        return queryset.filter(**filter_expressions)
