@@ -30,7 +30,10 @@ FROM gv-base AS dev
 # install dev and non-dev dependencies:
 RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.8.3
 RUN python -m venv .venv
-RUN poetry install --without release
+RUN poetry install --no-root --only main --no-interaction --no-ansi
+
+ENV VIRTUAL_ENV=/code/.venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 COPY . /code/
 
