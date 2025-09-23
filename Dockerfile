@@ -32,6 +32,9 @@ RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.8.3
 RUN python -m venv .venv
 RUN poetry install --without release
 
+ENV VIRTUAL_ENV=/code/.venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
 COPY . /code/
 
 # Start the Django development server

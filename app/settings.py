@@ -109,6 +109,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",
     "rest_framework_json_api",
+    "foreign_addons.s3compat",
     "addon_service",
     "django_celery_beat",
     "drf_spectacular",
@@ -135,6 +136,7 @@ ADDON_APPS = {
     # Type: Link
     "LINK_DATAVERSE": 1030,
     # Foreign Addons
+    "S3COMPAT": 5003,
 }
 
 if __debug__:

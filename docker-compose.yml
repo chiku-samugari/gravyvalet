@@ -29,6 +29,7 @@ services:
     stdin_open: true
     volumes:
       - ./:/code:cached
+      - /code/.venv
     depends_on:
       - celeryworker
       - postgres
