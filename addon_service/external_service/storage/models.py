@@ -39,6 +39,8 @@ class ExternalStorageService(ExternalService):
         validators=[validate_supported_features], null=True
     )
 
+    host_info = models.JSONField(default=dict, blank=True)
+
     @property
     def supported_features(self) -> list[StorageSupportedFeatures]:
         """get the enum representation of int_supported_features"""

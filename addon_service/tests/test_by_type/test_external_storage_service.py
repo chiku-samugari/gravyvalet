@@ -82,6 +82,35 @@ class TestExternalStorageServiceModel(TestCase):
             _accounts,
         )
 
+    def test_host_info__default_empty(self):
+        self.assertEqual(self._ess.host_info, {})
+
+    def test_host_info__set_and_retrieve(self):
+        _host_info = {
+            "availableServices": [
+                {
+                    "name": "Example Cloud",
+                    "host": "https://s3.example.com",
+                    "bucketLocations": {
+                        "us-east-1": {
+                            "name": "US East",
+                            "host": "https://s3.us-east-1.example.com",
+                        },
+                        "": {"name": "US East"},
+                    },
+                    "serverSideEncryption": False,
+                },
+                {
+                    "name": "Another Cloud",
+                    "host": "https://s3.another.example.com",
+                },
+            ],
+            "encryptUploads": True,
+        }
+        _ess = _factories.ExternalStorageServiceFactory(host_info=_host_info)
+        _from_db = db.ExternalStorageService.objects.get(id=_ess.id)
+        self.assertEqual(_from_db.host_info, _host_info)
+
     def test_validation__invalid_format(self):
         service = _factories.ExternalStorageOAuth2ServiceFactory()
         service.int_credentials_format = -1
@@ -136,13 +165,50 @@ class TestExternalStorageServiceViewSet(TestCase):
                     "supported_features",
                     "icon_url",
                     "api_base_url_options",
+                    "host_info",
                 },
             )
         with self.subTest("Confirm expected relationships"):
             relationship_fields = {
-                key for key, value in _resp.data.items() if isinstance(value, dict)
+                key
+                for key, value in _resp.data.items()
+                if isinstance(value, dict) and "type" in value
             }
             self.assertEqual(relationship_fields, {"addon_imp"})
+
+    def test_get__host_info_default_empty(self):
+        _resp = self._view(
+            get_test_request(),
+            pk=self._ess.pk,
+        )
+        self.assertEqual(_resp.status_code, HTTPStatus.OK)
+        self.assertEqual(_resp.data["host_info"], {})
+
+    def test_get__host_info_with_data(self):
+        _host_info = {
+            "availableServices": [
+                {
+                    "name": "Example Cloud",
+                    "host": "https://s3.example.com",
+                    "bucketLocations": {
+                        "us-east-1": {
+                            "name": "US East",
+                            "host": "https://s3.us-east-1.example.com",
+                        },
+                        "": {"name": "US East"},
+                    },
+                    "serverSideEncryption": False,
+                },
+            ],
+            "encryptUploads": True,
+        }
+        _ess = _factories.ExternalStorageServiceFactory(host_info=_host_info)
+        _resp = self._view(
+            get_test_request(),
+            pk=_ess.pk,
+        )
+        self.assertEqual(_resp.status_code, HTTPStatus.OK)
+        self.assertEqual(_resp.data["host_info"], _host_info)
 
     def test_unauthorized(self):
         """Is public resource Unauth is OK!"""
